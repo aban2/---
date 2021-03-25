@@ -33,7 +33,7 @@ def simplex(a, b, c, xb, cb):
             break
 
         # 计算theta，找到出口基
-        thetas = b / a[:, basis_in].reshape(3,1)
+        thetas = b / a[:, basis_in].reshape(a.shape[0],1)
         thetas[thetas < 0] = _inf
         idx = np.argmin(thetas)
         basis_out = list(xb)[idx]
@@ -103,9 +103,7 @@ def driver(a, b, c, method=1):
         simplex(a, b, c, xb, c[xb])
 
 a = np.array([[1, -2, 1, 1, 0], [-4, 1, 2, 0,-1], [-2, 0, 1, 0, 0]], dtype=np.float64)
-
 b = np.array([[11, 3, 1]], dtype=np.float64).T
-
 c = np.array([[3, -1, -1, 0, 0]]).T
 
 driver(a, b, c, 2)
