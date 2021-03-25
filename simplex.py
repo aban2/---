@@ -21,12 +21,20 @@ def simplex(a, b, c, xb, cb):
     _inf = 1 << 60
 
     # 循环更新基
-    checkers = np.array([0 for _ in range(c.shape[0])])
     while True:
         print(a)
         # 计算检验数，找到入口基
         checkers = c.T - np.dot(cb.T, a)
-        basis_in = np.argmax(checkers)
+        print('checkers', checkers)
+        for idx, num in enumerate(checkers[0]):
+            if num > 0:
+                basis_in = idx
+                break
+        # basis_in = np.argmax(checkers)
+        
+        # 计算当前价值
+        value = np.dot(cb.T, b)
+        print('value', value)
         
         # 若所有检验数<=0，停止算法
         if np.max(checkers) <= 0:
@@ -45,11 +53,9 @@ def simplex(a, b, c, xb, cb):
 
         # 打印单轮信息
         print('---update--')
-        print(basis_in, 'in and', basis_out, 'out')
+        print(basis_in+1, 'in and', basis_out+1, 'out')
         print('b:', b)
         print('cb:', cb)
-        print('xb:', xb)
-        print('checkers:', checkers)
         print('theta:', thetas)
         print()
 
@@ -102,8 +108,8 @@ def driver(a, b, c, method=1):
     else:
         simplex(a, b, c, xb, c[xb])
 
-a = np.array([[1, -2, 1, 1, 0], [-4, 1, 2, 0,-1], [-2, 0, 1, 0, 0]], dtype=np.float64)
-b = np.array([[11, 3, 1]], dtype=np.float64).T
-c = np.array([[3, -1, -1, 0, 0]]).T
+a = np.array([[2, -1, 3, 1], [1, 2, 4, 0]], dtype=np.float64)
+b = np.array([[30, 40]], dtype=np.float64).T
+c = np.array([[4,  2, 8, 0]]).T
 
-driver(a, b, c, 2)
+driver(a, b, c, 1)
