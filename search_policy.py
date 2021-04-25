@@ -1,10 +1,5 @@
 from math import sqrt
-
-
-def dot(x, y):
-    sum0 = 0
-    for i in range(len(x)): sum0 += x[i]*y[i]
-    return sum0
+import numpy as np
 
 
 # 二分法
@@ -57,7 +52,7 @@ def fibonacci(a0, b0, acc, fn, grad_fn):
 
 def dichotomous(a0, b0, acc, fn, grad_fn):
     l, r, num_iters = a0, b0, 0
-    float_judge = 1e-5
+    float_judge = 1e-3
 
     while r-l >= acc:
         num_iters += 1
@@ -87,7 +82,7 @@ def gold_stein(step_size, fn, grad_fn):
 
 
 def wolfe_powell(step_size, fn, grad_fn):
-    rou, sigma, alpha, beta, num_iters = 0.08, 1.25, 1.5, 0.5, 0
+    rou, sigma, alpha, beta, num_iters = 0.08, 0.5, 1.5, 0.5, 0
 
     grad0, f0 = grad_fn(0), fn(0)
     while True:
@@ -100,3 +95,41 @@ def wolfe_powell(step_size, fn, grad_fn):
         if diff > upper_bound: step_size *= beta
         elif new_grad < sigma*grad0: step_size *= alpha
         else: return step_size, num_iters
+
+
+def DFP(x0, h, eps, fn, grad_fn):
+    x = np.array(x0, dtype=np.float64)
+    num_iters = 0
+    while True:
+        grad = grad_fn(x)
+        if np.linalg.norm(grad) < eps: return x, num_iters
+        num_iters += 1
+        d = -np.dot(h, grad)
+        step_size, _ = dichotomous(0, 1, 0.001, \
+                              lambda a: fn(a*d[:,0]+x),\
+                              lambda a: grad_fn(a*d[:,0]+x).T.dot(d))
+        s = d*step_size
+        x += s[:,0]
+        y = grad_fn(x) - grad
+        delta_h = np.dot(s, s.T)/np.dot(s.T, y) - \
+                  h.dot(y).dot(y.T).dot(h)/y.T.dot(h).dot(y)
+        h += delta_h
+
+
+def BFGS(x0, b, eps, fn, grad_fn):
+    x = np.array(x0, dtype=np.float64)
+    num_iters = 0
+    while True:
+        grad = grad_fn(x)
+        if np.linalg.norm(grad) < eps: return x, num_iters
+        num_iters += 1
+        d = -np.dot(np.linalg.inv(b), grad)
+        step_size, _ = dichotomous(0, 1, eps, \
+                              lambda a: fn(a*d[:,0]+x),\
+                              lambda a: grad_fn(a*d[:,0]+x).T.dot(d))
+        s = d*step_size
+        x += s[:,0]
+        y = grad_fn(x) - grad
+        delta_b = np.dot(y, y.T)/np.dot(y.T, s) - \
+                  b.dot(s).dot(s.T).dot(b)/s.T.dot(b).dot(s)
+        b += delta_b

@@ -1,4 +1,4 @@
-from search_policy import gold_stein, wolfe_powell, bisect, golden_section
+from search_policy import gold_stein, wolfe_powell, bisect, golden_section, dichotomous, fibonacci
 
 
 def forward(step_size):
@@ -18,10 +18,10 @@ if __name__ == '__main__':
     x = [-1, 1]
     step_size, num_iters = gold_stein(1, forward, get_gradient)
     print('Approximate Search Finished after', num_iters, 'iterations')
-    print('step_size:%.5f f(x):%.2f grad:%.2f' % (step_size, forward(step_size), get_gradient(step_size)))
+    print('step_size:%.5f f(x):%.3f grad:%.2f' % (step_size, forward(step_size), get_gradient(step_size)))
     print()
 
-    step_size, num_iters = bisect(0, 1, 0.0005, forward, get_gradient)
+    step_size, num_iters = fibonacci(0, 1, 0.0005, forward, get_gradient)
     new_x = [x[i]+step_size*d[i] for i in range(len(x))]
     print('Precise Search Finished after', num_iters, 'iterations')
-    print('step_size:%.5f f(x):%.2f grad:%.2f' % (step_size, forward(step_size), get_gradient(step_size)))
+    print('step_size:%.5f f(x):%.3f grad:%.2f' % (step_size, forward(step_size), get_gradient(step_size)))
