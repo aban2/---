@@ -109,7 +109,6 @@ def DFP(x0, h, eps, fn, grad_fn):
                               lambda a: fn(a*d[:,0]+x),\
                               lambda a: grad_fn(a*d[:,0]+x).T.dot(d))
         s = d*step_size
-        print(num_iters, x, grad, step_size*d[:,0])
         x += s[:,0]
         y = grad_fn(x) - grad
         delta_h = np.dot(s, s.T)/np.dot(s.T, y) - \
@@ -143,13 +142,11 @@ def flecher_reeves(x0, eps, fn, grad_fn):
     num_iters = 0
     while True:
         num_iters += 1
-        if np.linalg.norm(d) < eps: print(x, grad_fn(x))
         if np.linalg.norm(d) < eps: return x, num_iters
-        step_size, _ = bisect(0, 1, eps, \
-                              lambda a: fn(a*d[:,0]+x),\
+        step_size, _ = bisect(0, 1, eps,
+                              lambda a: fn(a*d[:,0]+x),
                               lambda a: grad_fn(a*d[:,0]+x).T.dot(d))
         grad = grad_fn(x)
-        print(num_iters, x, grad, step_size*d[:,0])
         x += step_size*d[:,0]
         if step_size % 2 == 0:
             d = -grad_fn(x0)
@@ -157,3 +154,34 @@ def flecher_reeves(x0, eps, fn, grad_fn):
             new_grad = grad_fn(x)
             beta = new_grad.T.dot(new_grad)/grad.T.dot(grad)
             d = beta*d - new_grad
+
+
+def momentum(x0, eps, fn, grad_fn):
+    beta = 0.9
+    x = np.array(x0, dtype=np.float64)
+    v = np.zeros(2)
+    num_iters = 0
+    while True:
+        num_iters += 1
+        grad = grad_fn(x)[:,0]
+        if np.linalg.norm(grad) < eps: return x, num_iters
+        v = beta*v+(1-beta)*grad
+        step_size, _ = bisect(0, 1, eps,
+                              lambda a: fn(-a * v + x),
+                              lambda a: -grad_fn(-a * v + x).T.dot(v))
+        step_size = 1e-3
+        x -= v*step_size
+
+
+def RMSprop(x0, acc, fn, grad_fn):
+    beta, eps = 0.999, 1e-8
+    x = np.array(x0, dtype=np.float64)
+    s = np.zeros(2)
+    num_iters = 0
+    step_size = 0.1
+    while True:
+        num_iters += 1
+        grad = grad_fn(x)[:,0]
+        if np.linalg.norm(grad) < acc: return x, num_iters
+        s = beta*s+(1-beta)*grad**2
+        x -= step_size*grad/(np.linalg.norm(s)+eps)
