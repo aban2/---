@@ -105,10 +105,11 @@ def DFP(x0, h, eps, fn, grad_fn):
         if np.linalg.norm(grad) < eps: return x, num_iters
         num_iters += 1
         d = -np.dot(h, grad)
-        step_size, _ = dichotomous(0, 1, 0.001, \
+        step_size, _ = bisect(0, 1, 0.001, \
                               lambda a: fn(a*d[:,0]+x),\
                               lambda a: grad_fn(a*d[:,0]+x).T.dot(d))
         s = d*step_size
+        print(num_iters, x, grad, step_size*d[:,0])
         x += s[:,0]
         y = grad_fn(x) - grad
         delta_h = np.dot(s, s.T)/np.dot(s.T, y) - \
@@ -124,7 +125,7 @@ def BFGS(x0, b, eps, fn, grad_fn):
         if np.linalg.norm(grad) < eps: return x, num_iters
         num_iters += 1
         d = -np.dot(np.linalg.inv(b), grad)
-        step_size, _ = dichotomous(0, 1, eps, \
+        step_size, _ = bisect(0, 1, eps, \
                               lambda a: fn(a*d[:,0]+x),\
                               lambda a: grad_fn(a*d[:,0]+x).T.dot(d))
         s = d*step_size
@@ -133,3 +134,26 @@ def BFGS(x0, b, eps, fn, grad_fn):
         delta_b = np.dot(y, y.T)/np.dot(y.T, s) - \
                   b.dot(s).dot(s.T).dot(b)/s.T.dot(b).dot(s)
         b += delta_b
+
+
+def flecher_reeves(x0, eps, fn, grad_fn):
+    x0 = np.array(x0, dtype=np.float64)
+    x = np.array(x0, dtype=np.float64)
+    d = -grad_fn(x)
+    num_iters = 0
+    while True:
+        num_iters += 1
+        if np.linalg.norm(d) < eps: print(x, grad_fn(x))
+        if np.linalg.norm(d) < eps: return x, num_iters
+        step_size, _ = bisect(0, 1, eps, \
+                              lambda a: fn(a*d[:,0]+x),\
+                              lambda a: grad_fn(a*d[:,0]+x).T.dot(d))
+        grad = grad_fn(x)
+        print(num_iters, x, grad, step_size*d[:,0])
+        x += step_size*d[:,0]
+        if step_size % 2 == 0:
+            d = -grad_fn(x0)
+        else:
+            new_grad = grad_fn(x)
+            beta = new_grad.T.dot(new_grad)/grad.T.dot(grad)
+            d = beta*d - new_grad
